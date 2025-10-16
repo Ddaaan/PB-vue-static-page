@@ -77,18 +77,23 @@ function toggleTheme() {
   isNight.value = !isNight.value;
 }
 
-/** 덕담: 최소 1개 이상을 타입으로 보장(튜플) → undefined 없음 */
-const wishes: [string, ...string[]] = [
+/** 덕담: 비어있지 않은 상수 배열 + 안전한 fallback */
+const WISHES = [
   '보름달처럼 넉넉한 행복이 가득하시길!',
   '달에게 빈 소원, 올가을에 이루어지길 바랍니다.',
   '멀리 있어도 마음은 한가위처럼 한곳에 😊',
   '가족과 웃음꽃 피는 풍성한 연휴 되세요.',
   '건강하고 달달한 추석 보내세요! 송편처럼요 🥟',
-];
+] as const;
+
 const wishIndex = ref(0);
-const currentWish = computed<string>(() => wishes[wishIndex.value % wishes.length]);
+const currentWish = computed<string>(() => {
+  const idx = wishIndex.value % WISHES.length;
+  // ✅ 항상 string만 반환 (undefined 불가)
+  return WISHES[idx] ?? WISHES[0];
+});
 function nextWish() {
-  wishIndex.value = (wishIndex.value + 1) % wishes.length;
+  wishIndex.value = (wishIndex.value + 1) % WISHES.length;
 }
 
 /** 메모 */
@@ -111,6 +116,7 @@ function lanternStyle(i: number) {
   } as const;
 }
 </script>
+
 
 <style scoped>
 /* 배경/레이아웃 */
