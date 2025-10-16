@@ -1,7 +1,22 @@
 <template>
   <main class="app" :data-night="isNight">
-    <!-- 헤더: 달/해 토글 -->
+    <!-- 배경: 하늘/별 -->
+    <div class="sky" aria-hidden="true">
+      <i v-for="n in 80" :key="n" class="star" />
+    </div>
+
+    <!-- 헤더: 보름달 & 밤 느낌 카피 + 테마 토글 -->
     <header class="hero">
+      <div class="copy">
+        <h1>
+          <span class="eyebrow">BOREUMDAL NIGHT</span>
+          보름달 아래, 잔잔한 밤의 안부
+        </h1>
+        <p class="subtitle">
+          달빛처럼 포근한 한가위의 밤—가족의 웃음과 따뜻한 마음이 가득하길.
+        </p>
+      </div>
+
       <button class="orb" @click="toggleTheme" :title="isNight ? '아침으로 전환' : '밤으로 전환'" aria-label="테마 전환">
         <svg v-if="isNight" viewBox="0 0 120 120" class="moon">
           <defs>
@@ -29,39 +44,59 @@
           </g>
         </svg>
       </button>
-
-      <div class="title">
-        <span class="badge">中秋</span>
-        <h1>풍성한 한가위 되세요</h1>
-        <p class="subtitle">보름달처럼 마음도 꽉 찬 명절 되길 바라요 🌕</p>
-      </div>
     </header>
 
-    <!-- 덕담 카드 -->
-    <section class="card">
-      <p class="wish">{{ currentWish }}</p>
-      <div class="actions">
-        <button class="btn" @click="nextWish">다음 덕담</button>
-      </div>
+    <!-- 본문 섹션 -->
+    <section class="section">
+      <h2>행복한 한가위!</h2>
 
-      <div class="obang">
-        <span class="c-blue" title="청(東)"></span>
-        <span class="c-red" title="적(南)"></span>
-        <span class="c-yellow" title="황(中)"></span>
-        <span class="c-white" title="백(西)"></span>
-        <span class="c-black" title="흑(北)"></span>
-      </div>
+      <div class="grid">
+        <!-- 음식 -->
+        <article class="panel">
+          <h3>추석 음식</h3>
+          <ul class="list">
+            <li v-for="food in foods" :key="food.name">
+              <span class="name">{{ food.name }}</span>
+              <span class="dash">—</span>
+              <span class="desc">{{ food.desc }}</span>
+            </li>
+          </ul>
+        </article>
 
-      <label class="note">
-        <textarea v-model="note" placeholder="전하고 싶은 한마디를 적어보세요…"></textarea>
-      </label>
-      <button class="btn ghost" @click="clearNote" :disabled="note.trim().length === 0">메모 지우기</button>
+        <!-- 놀이 -->
+        <article class="panel">
+          <h3>추석 놀이</h3>
+          <ul class="list">
+            <li v-for="play in plays" :key="play.name">
+              <span class="name">{{ play.name }}</span>
+              <span class="dash">—</span>
+              <span class="desc">{{ play.desc }}</span>
+            </li>
+          </ul>
+        </article>
+
+        <!-- 메모 -->
+        <article class="panel">
+          <h3>한가위 메모</h3>
+          <label class="note">
+            <textarea v-model="note" placeholder="전하고 싶은 한마디를 적어보세요…"></textarea>
+          </label>
+          <button class="btn ghost" @click="clearNote" :disabled="note.trim().length === 0">메모 지우기</button>
+
+          <div class="obang">
+            <span class="c-blue" title="청(東)"></span>
+            <span class="c-red" title="적(南)"></span>
+            <span class="c-yellow" title="황(中)"></span>
+            <span class="c-white" title="백(西)"></span>
+            <span class="c-black" title="흑(北)"></span>
+          </div>
+        </article>
+      </div>
     </section>
 
-    <!-- 연등 (은은한 애니메이션) -->
-    <ul class="lanterns" aria-hidden="true">
-      <li v-for="i in 6" :key="i" :style="lanternStyle(i - 1)"></li>
-    </ul>
+    <footer class="foot">
+      <small>© 한가위 웹페이지 — 달/해 버튼을 눌러 낮·밤을 전환해보세요.</small>
+    </footer>
 
     <!-- 한지 텍스처 -->
     <div class="hanji" aria-hidden="true"></div>
@@ -69,57 +104,42 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 
-/** 테마 */
+/** 테마 토글 */
 const isNight = ref(true);
 function toggleTheme() {
   isNight.value = !isNight.value;
 }
 
-/** 덕담: 비어있지 않은 상수 배열 + 안전한 fallback */
-const WISHES = [
-  '보름달처럼 넉넉한 행복이 가득하시길!',
-  '달에게 빈 소원, 올가을에 이루어지길 바랍니다.',
-  '멀리 있어도 마음은 한가위처럼 한곳에 😊',
-  '가족과 웃음꽃 피는 풍성한 연휴 되세요.',
-  '건강하고 달달한 추석 보내세요! 송편처럼요 🥟',
-] as const;
+/** 데이터: 추석 음식/놀이 — 타입 명시로 안전하게 */
+type Item = { name: string; desc: string; };
 
-const wishIndex = ref(0);
-const currentWish = computed<string>(() => {
-  const idx = wishIndex.value % WISHES.length;
-  // ✅ 항상 string만 반환 (undefined 불가)
-  return WISHES[idx] ?? WISHES[0];
-});
-function nextWish() {
-  wishIndex.value = (wishIndex.value + 1) % WISHES.length;
-}
+const foods: Item[] = [
+  { name: '송편', desc: '솔잎 향을 입힌 반달 모양 떡. 한 해의 수확과 소원을 빚어 넣어요.' },
+  { name: '토란국', desc: '담백하고 고소한 국물에 토란을 넣어 끓인 제수 음식.' },
+  { name: '전', desc: '호박/동태/버섯 등 재료를 반죽에 입혀 지진 명절 부침.' },
+  { name: '나물', desc: '고사리/시금치 등 산나물로 차례상과 식탁을 채워요.' },
+  { name: '식혜', desc: '엿기름으로 만든 전통 음료. 달콤하고 깔끔한 맛.' },
+];
+
+const plays: Item[] = [
+  { name: '강강술래', desc: '보름달 아래 손에 손을 맞잡고 둥글게 돌아 추는 전통 춤.' },
+  { name: '윷놀이', desc: '가족이 함께 윷가락을 던져 말을 움직이는 보드 게임.' },
+  { name: '줄다리기', desc: '마을 단위로 힘을 모아 승부를 겨루던 공동체 놀이.' },
+  { name: '씨름', desc: '넉넉한 기운을 기원하며 겨루는 전통 민속 스포츠.' },
+  { name: '소원 빌기', desc: '둥근 보름달을 바라보며 한 해의 소원을 되새겨요.' },
+];
 
 /** 메모 */
 const note = ref('');
 function clearNote() {
   note.value = '';
 }
-
-/** 연등 스타일 */
-function lanternStyle(i: number) {
-  const left = (i * 15 + 10) % 100;
-  const delay = (i % 5) * 0.8;
-  const dur = 9 + (i % 4) * 2;
-  const scale = 0.8 + (i % 3) * 0.12;
-  return {
-    left: `${left}%`,
-    animationDelay: `${delay}s`,
-    animationDuration: `${dur}s`,
-    transform: `scale(${scale})`,
-  } as const;
-}
 </script>
 
-
 <style scoped>
-/* 배경/레이아웃 */
+/* 색/배경 */
 .app {
   --bg-night: linear-gradient(180deg, #0b132b 0%, #1c2541 60%, #3a506b 100%);
   --bg-day: linear-gradient(180deg, #9be2ff 0%, #c7f5ff 60%, #fef6e4 100%);
@@ -130,10 +150,10 @@ function lanternStyle(i: number) {
 
   min-height: 100svh;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto 1fr auto;
   place-items: center;
-  overflow: hidden;
   position: relative;
+  overflow: hidden;
   background: var(--bg-night);
   color: var(--ink);
   transition: background 700ms ease;
@@ -150,30 +170,41 @@ function lanternStyle(i: number) {
   opacity: 0.35; mix-blend-mode: multiply; pointer-events: none;
 }
 
-/* Hero */
-.hero {
-  width: 100%; max-width: 980px;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: start;
-  gap: 16px;
+/* 배경 별 */
+.sky { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.star {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: #fff9d6; border-radius: 50%;
+  top: calc((var(--i, 1) * 7) % 100 * 1%); left: calc((var(--i, 1) * 13) % 100 * 1%);
+  opacity: .85; animation: twinkle 2.8s infinite ease-in-out;
 }
-.title { text-align: right; }
-.title h1 {
-  font-size: clamp(26px, 5vw, 42px);
-  margin: 6px 0 4px;
-  letter-spacing: 0.02em;
-  font-weight: 800;
+.star:nth-child(odd) { width: 1px; height: 1px; opacity: .6; }
+.star:nth-child(3n) { animation-duration: 3.6s; }
+.star:nth-child(n) { --i: 1; }
+@keyframes twinkle { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:1;transform:scale(1.6)} }
+.app[data-night="false"] .star { display: none; }
+
+/* 헤더 */
+.hero {
+  width: 100%; max-width: 1040px;
+  display: grid; grid-template-columns: 1fr auto;
+  align-items: start; gap: 16px;
+}
+.copy h1 {
+  margin: 0;
+  font-size: clamp(26px, 5vw, 44px);
+  font-weight: 800; letter-spacing: .01em;
   background: linear-gradient(90deg, #8b5cf6, #f59e0b, #ef4444);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
-.subtitle { margin: 0; color: var(--ink-soft); }
-.badge {
-  display: inline-block;
-  font-size: 12px; padding: 4px 8px; border-radius: 999px;
+.eyebrow {
+  display: inline-block; font-size: 12px; letter-spacing: .2em;
+  padding: 4px 8px; border-radius: 999px;
   background: rgba(245,183,0,0.15); color: #a36b00; border: 1px solid rgba(245,183,0,0.35);
-  letter-spacing: 0.2em;
+  margin-bottom: 8px;
 }
+.subtitle { margin: 8px 0 0; color: var(--ink-soft); }
 
 /* 달/해 버튼 */
 .orb {
@@ -186,25 +217,52 @@ function lanternStyle(i: number) {
 .orb:hover { transform: scale(1.03) rotate(-2deg); }
 .moon, .sun { width: 100%; height: 100%; display: block; }
 
-/* 카드 */
-.card {
-  position: relative;
-  width: min(960px, 92vw);
+/* 섹션 */
+.section {
+  width: 100%; max-width: 1040px;
+  margin-top: clamp(16px, 3.5vw, 28px);
   background: var(--card);
   backdrop-filter: blur(8px);
   border: 1px solid var(--card-border);
   box-shadow: 0 18px 55px rgba(0,0,0,0.18);
   border-radius: 20px;
   padding: clamp(16px, 3.5vw, 28px);
-  margin-top: clamp(14px, 3vw, 24px);
-  z-index: 2;
 }
-.wish {
-  text-align: center;
-  font-size: clamp(16px, 2.4vw, 20px);
-  margin: 2px 0 14px;
+.section > h2 {
+  margin: 0 0 12px; font-size: clamp(22px, 3.6vw, 28px);
 }
-.actions { display: flex; justify-content: center; }
+
+/* 그리드 */
+.grid {
+  display: grid; gap: 14px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 860px) {
+  .grid { grid-template-columns: 1.1fr 1fr 1.1fr; }
+}
+
+/* 패널 */
+.panel {
+  background: #fff; border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 14px; padding: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+.panel h3 { margin: 0 0 8px; font-size: 16px; }
+
+/* 리스트 */
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.list li { display: grid; grid-template-columns: auto auto 1fr; align-items: start; gap: 6px; }
+.name { font-weight: 700; }
+.dash { opacity: .6; }
+.desc { color: var(--ink-soft); }
+
+/* 메모 */
+.note textarea {
+  width: 100%; min-height: 96px; resize: vertical;
+  padding: 10px 12px; border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.12); background: #fffdfa;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+}
 
 /* 버튼 */
 .btn {
@@ -212,42 +270,21 @@ function lanternStyle(i: number) {
   background: linear-gradient(90deg, #f59e0b, #ef4444);
   color: white; padding: 10px 14px; border-radius: 10px; font-weight: 700;
   cursor: pointer; transition: transform 120ms ease, filter 120ms ease;
+  margin-top: 10px;
 }
 .btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
 .btn:active { transform: translateY(0); }
-.btn.ghost { background: transparent; border: 1px solid rgba(0,0,0,0.15); color: var(--ink); margin-top: 10px; }
+.btn.ghost { background: transparent; border: 1px solid rgba(0,0,0,0.15); color: var(--ink); }
 
-/* 오방색 */
+/* 오방색 포인트 */
 .obang {
   display: grid; grid-template-columns: repeat(5, 1fr);
-  gap: 6px; margin: 12px auto; max-width: 280px;
+  gap: 6px; margin-top: 12px;
 }
 .obang span { display:block; height: 16px; border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12); }
 .c-blue { background:#0ea5e9; } .c-red{background:#ef4444;} .c-yellow{background:#fbbf24;}
-.c-white{background:#e5e7eb;} .c-black{background:#111827;}
+.c-white{background:#e5e7eb;} .c-black{background:#111827; }
 
-/* 메모 */
-.note textarea {
-  width: 100%; min-height: 90px; resize: vertical;
-  padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.12);
-  background: #fffdfa;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
-}
-
-/* 연등 */
-.lanterns { list-style:none; margin:0; padding:0; position:absolute; inset-inline:0; bottom:-20vh; }
-.lanterns li {
-  position:absolute; bottom:-20vh; width:26px; height:34px;
-  background: linear-gradient(#ffecd1, #ffc48a);
-  border:2px solid rgba(0,0,0,0.1);
-  border-radius:6px 6px 10px 10px;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.15), 0 0 20px rgba(255,160,64,0.45);
-  animation: floatUp linear infinite;
-}
-.lanterns li::before, .lanterns li::after { content:''; position:absolute; left:50%; transform:translateX(-50%); }
-.lanterns li::before { top:-10px; width:2px; height:14px; background:rgba(255,255,255,0.5); }
-.lanterns li::after { bottom:-10px; width:6px; height:6px; background:#ffbe76; border-radius:50%; box-shadow:0 0 10px rgba(255,190,118,0.8); }
-@keyframes floatUp { from{transform:translateY(0)} to{transform:translateY(-120vh)} }
-
-.app[data-night="false"] .lanterns li { opacity:.75; box-shadow: 0 6px 12px rgba(0,0,0,0.1), 0 0 0 rgba(255,160,64,0); }
+/* 푸터 */
+.foot { margin-top: 12px; text-align: center; color: var(--ink-soft); }
 </style>
