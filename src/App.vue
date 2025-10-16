@@ -73,8 +73,8 @@ import { ref, onMounted } from 'vue';
 const isNight = ref(true);
 const note = ref('');
 
-/** non-empty 배열 보장 + 안전 래퍼로 undefined 제거 */
-const wishes = [
+/** ✅ 최소 1개 이상 원소가 있는 튜플 타입로 선언 */
+const wishesNonEmpty: [string, ...string[]] = [
   '보름달처럼 넉넉한 행복이 가득하시길!',
   '달에게 빈 소원, 올가을에 이루어지길 바랍니다.',
   '멀리 있어도 마음은 한가위처럼 한곳에 😊',
@@ -82,18 +82,20 @@ const wishes = [
   '건강하고 달달한 추석 보내세요! 송편처럼요 🥟',
 ];
 
-const currentWish = ref<string>('보름달처럼 넉넉한 행복이 가득하시길!');
+/** 필요하면 일반 배열처럼도 쓰려고 별도 참조 */
+const wishes: readonly string[] = wishesNonEmpty;
 
-const pickRandom = (arr: string[]): string => {
-  const len = arr.length;
-  if (len === 0) return '';
-  const idx = Math.floor(Math.random() * len);
-  // || arr[0] 로 한 번 더 안전
-  return arr[idx] || arr[0];
-};
+/** ✅ ref<string> + 초기값은 튜플의 [0] (undefined 불가) */
+const currentWish = ref<string>(wishesNonEmpty[0]);
+
+/** ✅ 파라미터도 “비어있지 않은 배열”을 받도록 타입 보장 */
+function pickRandom(arr: readonly [string, ...string[]]): string {
+  const idx = Math.floor(Math.random() * arr.length);
+  return arr[idx]; // 여기선 절대 undefined 아님
+}
 
 function shuffleWish() {
-  currentWish.value = pickRandom(wishes);
+  currentWish.value = pickRandom(wishesNonEmpty);
 }
 
 function toggleTheme() {
@@ -105,10 +107,10 @@ function clearNote() {
 }
 
 onMounted(() => {
-  // 굳이 변수에 담지 않고 돌리면 미사용 경고 없음
   setInterval(shuffleWish, 6000);
 });
 
+/** 연등 스타일 */
 function lanternStyle(i: number) {
   const left = (i * 15 + 10) % 100;
   const delay = (i % 5) * 0.8;
@@ -122,6 +124,7 @@ function lanternStyle(i: number) {
   } as const;
 }
 </script>
+
 
 <style scoped>
 /* 배경/레이아웃 */
