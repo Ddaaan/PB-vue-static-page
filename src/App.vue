@@ -103,19 +103,22 @@ const isNight = ref(true);
 const note = ref('');
 const LANTERN_COUNT = 8 as const;
 
-const wishes = [
+// ✅ string[] 로 넓혀서 선언
+const wishes: string[] = [
   '보름달처럼 넉넉한 행복이 가득하시길!',
   '달에게 빈 소원, 올가을에 이루어지길 바랍니다.',
   '멀리 있어도 마음은 한가위처럼 한곳에 😊',
   '가족과 웃음꽃 피는 풍성한 연휴 되세요.',
   '건강하고 달달한 추석 보내세요! 송편처럼요 🥟',
-] as const;
+];
 
-const currentWish = ref(wishes[0]);
+// ✅ ref<string> 으로 타입 고정
+const currentWish = ref<string>(wishes[0]);
 
 function shuffleWish() {
   const idx = Math.floor(Math.random() * wishes.length);
-  currentWish.value = wishes[idx];
+  // ✅ 혹시 모를 범위 밖 인덱스에 대비 (TS 만족)
+  currentWish.value = wishes[idx] ?? wishes[0];
 }
 
 function toggleTheme() {
