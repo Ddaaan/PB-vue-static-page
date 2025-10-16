@@ -1,6 +1,6 @@
 <template>
   <main class="app" :data-night="isNight">
-    <!-- 헤더 -->
+    <!-- 헤더: 달/해 토글 -->
     <header class="hero">
       <button class="orb" @click="toggleTheme" :title="isNight ? '아침으로 전환' : '밤으로 전환'" aria-label="테마 전환">
         <svg v-if="isNight" viewBox="0 0 120 120" class="moon">
@@ -41,8 +41,9 @@
     <section class="card">
       <p class="wish">{{ currentWish }}</p>
       <div class="actions">
-        <button class="btn" @click="shuffleWish">다른 덕담 보기</button>
+        <button class="btn" @click="nextWish">다음 덕담</button>
       </div>
+
       <div class="obang">
         <span class="c-blue" title="청(東)"></span>
         <span class="c-red" title="적(南)"></span>
@@ -57,9 +58,9 @@
       <button class="btn ghost" @click="clearNote" :disabled="note.trim().length === 0">메모 지우기</button>
     </section>
 
-    <!-- 연등 몇 개만 부드럽게 -->
+    <!-- 연등 (은은한 애니메이션) -->
     <ul class="lanterns" aria-hidden="true">
-      <li v-for="i in 6" :key="i" :style="lanternStyle(i)"></li>
+      <li v-for="i in 6" :key="i" :style="lanternStyle(i - 1)"></li>
     </ul>
 
     <!-- 한지 텍스처 -->
@@ -68,47 +69,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 
+/** 테마 */
 const isNight = ref(true);
-const note = ref('');
+function toggleTheme() {
+  isNight.value = !isNight.value;
+}
 
-/** ✅ 최소 1개 이상 원소가 있는 튜플 타입로 선언 */
-const wishesNonEmpty: [string, ...string[]] = [
+/** 덕담: 최소 1개 이상을 타입으로 보장(튜플) → undefined 없음 */
+const wishes: [string, ...string[]] = [
   '보름달처럼 넉넉한 행복이 가득하시길!',
   '달에게 빈 소원, 올가을에 이루어지길 바랍니다.',
   '멀리 있어도 마음은 한가위처럼 한곳에 😊',
   '가족과 웃음꽃 피는 풍성한 연휴 되세요.',
   '건강하고 달달한 추석 보내세요! 송편처럼요 🥟',
 ];
-
-/** 필요하면 일반 배열처럼도 쓰려고 별도 참조 */
-const wishes: readonly string[] = wishesNonEmpty;
-
-/** ✅ ref<string> + 초기값은 튜플의 [0] (undefined 불가) */
-const currentWish = ref<string>(wishesNonEmpty[0]);
-
-/** ✅ 파라미터도 “비어있지 않은 배열”을 받도록 타입 보장 */
-function pickRandom(arr: readonly [string, ...string[]]): string {
-  const idx = Math.floor(Math.random() * arr.length);
-  return arr[idx]; // 여기선 절대 undefined 아님
+const wishIndex = ref(0);
+const currentWish = computed<string>(() => wishes[wishIndex.value % wishes.length]);
+function nextWish() {
+  wishIndex.value = (wishIndex.value + 1) % wishes.length;
 }
 
-function shuffleWish() {
-  currentWish.value = pickRandom(wishesNonEmpty);
-}
-
-function toggleTheme() {
-  isNight.value = !isNight.value;
-}
-
+/** 메모 */
+const note = ref('');
 function clearNote() {
   note.value = '';
 }
-
-onMounted(() => {
-  setInterval(shuffleWish, 6000);
-});
 
 /** 연등 스타일 */
 function lanternStyle(i: number) {
@@ -124,7 +111,6 @@ function lanternStyle(i: number) {
   } as const;
 }
 </script>
-
 
 <style scoped>
 /* 배경/레이아웃 */
@@ -166,9 +152,7 @@ function lanternStyle(i: number) {
   align-items: start;
   gap: 16px;
 }
-.title {
-  text-align: right;
-}
+.title { text-align: right; }
 .title h1 {
   font-size: clamp(26px, 5vw, 42px);
   margin: 6px 0 4px;
