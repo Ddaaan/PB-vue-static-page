@@ -1,11 +1,16 @@
 <template>
   <main class="app" :data-night="isNight">
-    <!-- 배경: 하늘/별 -->
+    <!-- 별이 있는 밤하늘 -->
     <div class="sky" aria-hidden="true">
       <i v-for="n in 80" :key="n" class="star" />
     </div>
 
-    <!-- 헤더: 보름달 & 밤 느낌 카피 + 테마 토글 -->
+    <!-- 떠다니는 풍등 -->
+    <ul class="lanterns" aria-hidden="true">
+      <li v-for="i in 8" :key="i" :style="lanternStyle(i - 1)"></li>
+    </ul>
+
+    <!-- 헤더: 보름달 & 밤 느낌 + 토글 -->
     <header class="hero">
       <div class="copy">
         <h1>
@@ -46,7 +51,7 @@
       </button>
     </header>
 
-    <!-- 본문 섹션 -->
+    <!-- 본문 -->
     <section class="section">
       <h2>행복한 한가위!</h2>
 
@@ -79,10 +84,18 @@
         <article class="panel">
           <h3>한가위 메모</h3>
           <label class="note">
-            <textarea v-model="note" placeholder="전하고 싶은 한마디를 적어보세요…"></textarea>
+            <!-- ✅ 부모보다 커지지 않도록 box-sizing 및 width 고정, 글자색 진하게 -->
+            <textarea
+                v-model="note"
+                class="memo"
+                placeholder="전하고 싶은 한마디를 적어보세요…"
+            ></textarea>
           </label>
-          <button class="btn ghost" @click="clearNote" :disabled="note.trim().length === 0">메모 지우기</button>
+          <button class="btn ghost" @click="clearNote" :disabled="note.trim().length === 0">
+            메모 지우기
+          </button>
 
+          <!-- 오방색 포인트 -->
           <div class="obang">
             <span class="c-blue" title="청(東)"></span>
             <span class="c-red" title="적(南)"></span>
@@ -95,7 +108,7 @@
     </section>
 
     <footer class="foot">
-      <small>© 한가위 웹페이지 — 달/해 버튼을 눌러 낮·밤을 전환해보세요.</small>
+      <small>© 한가위 웹페이지 — 달/해 버튼으로 낮·밤 전환</small>
     </footer>
 
     <!-- 한지 텍스처 -->
@@ -112,21 +125,22 @@ function toggleTheme() {
   isNight.value = !isNight.value;
 }
 
-/** 데이터: 추석 음식/놀이 — 타입 명시로 안전하게 */
+/** 데이터 타입 */
 type Item = { name: string; desc: string; };
 
+/** 추석 음식/놀이 */
 const foods: Item[] = [
-  { name: '송편', desc: '솔잎 향을 입힌 반달 모양 떡. 한 해의 수확과 소원을 빚어 넣어요.' },
-  { name: '토란국', desc: '담백하고 고소한 국물에 토란을 넣어 끓인 제수 음식.' },
-  { name: '전', desc: '호박/동태/버섯 등 재료를 반죽에 입혀 지진 명절 부침.' },
-  { name: '나물', desc: '고사리/시금치 등 산나물로 차례상과 식탁을 채워요.' },
+  { name: '송편', desc: '솔잎 향을 입힌 반달 떡. 수확과 소원을 빚어 넣어요.' },
+  { name: '토란국', desc: '담백한 국물에 토란을 넣어 끓이는 제수 음식.' },
+  { name: '전', desc: '호박·동태·버섯 등 재료를 노릇하게 지진 명절 부침.' },
+  { name: '나물', desc: '고사리·시금치 등 산나물로 차례상과 식탁을 채워요.' },
   { name: '식혜', desc: '엿기름으로 만든 전통 음료. 달콤하고 깔끔한 맛.' },
 ];
 
 const plays: Item[] = [
-  { name: '강강술래', desc: '보름달 아래 손에 손을 맞잡고 둥글게 돌아 추는 전통 춤.' },
-  { name: '윷놀이', desc: '가족이 함께 윷가락을 던져 말을 움직이는 보드 게임.' },
-  { name: '줄다리기', desc: '마을 단위로 힘을 모아 승부를 겨루던 공동체 놀이.' },
+  { name: '강강술래', desc: '보름달 아래 손을 맞잡고 둥글게 돌며 추는 전통 춤.' },
+  { name: '윷놀이', desc: '윷가락을 던져 말을 움직이는 가족 보드 게임.' },
+  { name: '줄다리기', desc: '마을이 힘을 모아 승부를 겨루던 공동체 놀이.' },
   { name: '씨름', desc: '넉넉한 기운을 기원하며 겨루는 전통 민속 스포츠.' },
   { name: '소원 빌기', desc: '둥근 보름달을 바라보며 한 해의 소원을 되새겨요.' },
 ];
@@ -136,10 +150,24 @@ const note = ref('');
 function clearNote() {
   note.value = '';
 }
+
+/** 풍등 스타일 (엄격 TS 안전) */
+function lanternStyle(i: number) {
+  const left = (i * 12 + 6) % 100;
+  const delay = (i % 5) * 0.9;
+  const dur = 10 + (i % 4) * 2;
+  const scale = 0.8 + (i % 3) * 0.12;
+  return {
+    left: `${left}%`,
+    animationDelay: `${delay}s`,
+    animationDuration: `${dur}s`,
+    transform: `scale(${scale})`,
+  } as const;
+}
 </script>
 
 <style scoped>
-/* 색/배경 */
+/* 기본 레이아웃 / 컬러 */
 .app {
   --bg-night: linear-gradient(180deg, #0b132b 0%, #1c2541 60%, #3a506b 100%);
   --bg-day: linear-gradient(180deg, #9be2ff 0%, #c7f5ff 60%, #fef6e4 100%);
@@ -170,12 +198,10 @@ function clearNote() {
   opacity: 0.35; mix-blend-mode: multiply; pointer-events: none;
 }
 
-/* 배경 별 */
+/* 별 */
 .sky { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .star {
-  position: absolute;
-  width: 2px; height: 2px;
-  background: #fff9d6; border-radius: 50%;
+  position: absolute; width: 2px; height: 2px; background: #fff9d6; border-radius: 50%;
   top: calc((var(--i, 1) * 7) % 100 * 1%); left: calc((var(--i, 1) * 13) % 100 * 1%);
   opacity: .85; animation: twinkle 2.8s infinite ease-in-out;
 }
@@ -184,6 +210,22 @@ function clearNote() {
 .star:nth-child(n) { --i: 1; }
 @keyframes twinkle { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:1;transform:scale(1.6)} }
 .app[data-night="false"] .star { display: none; }
+
+/* 풍등 */
+.lanterns { list-style: none; margin: 0; padding: 0; position: absolute; inset-inline: 0; bottom: -20vh; pointer-events: none; }
+.lanterns li {
+  position: absolute; bottom: -20vh; width: 26px; height: 34px;
+  background: linear-gradient(#ffecd1, #ffc48a);
+  border: 2px solid rgba(0,0,0,0.1);
+  border-radius: 6px 6px 10px 10px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15), 0 0 20px rgba(255,160,64,0.45);
+  animation: floatUp linear infinite;
+}
+.lanterns li::before, .lanterns li::after { content:''; position:absolute; left:50%; transform:translateX(-50%); }
+.lanterns li::before { top:-10px; width:2px; height:14px; background:rgba(255,255,255,0.5); }
+.lanterns li::after { bottom:-10px; width:6px; height:6px; background:#ffbe76; border-radius:50%; box-shadow:0 0 10px rgba(255,190,118,0.8); }
+@keyframes floatUp { from{transform:translateY(0)} to{transform:translateY(-120vh)} }
+.app[data-night="false"] .lanterns li { opacity:.75; box-shadow: 0 6px 12px rgba(0,0,0,0.1), 0 0 0 rgba(255,160,64,0); }
 
 /* 헤더 */
 .hero {
@@ -228,24 +270,18 @@ function clearNote() {
   border-radius: 20px;
   padding: clamp(16px, 3.5vw, 28px);
 }
-.section > h2 {
-  margin: 0 0 12px; font-size: clamp(22px, 3.6vw, 28px);
-}
+.section > h2 { margin: 0 0 12px; font-size: clamp(22px, 3.6vw, 28px); }
 
 /* 그리드 */
-.grid {
-  display: grid; gap: 14px;
-  grid-template-columns: 1fr;
-}
-@media (min-width: 860px) {
-  .grid { grid-template-columns: 1.1fr 1fr 1.1fr; }
-}
+.grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .grid { grid-template-columns: 1.1fr 1fr 1.1fr; } }
 
 /* 패널 */
 .panel {
   background: #fff; border: 1px solid rgba(0,0,0,0.06);
   border-radius: 14px; padding: 14px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  overflow: hidden; /* ✅ 내부 요소가 넘칠 때 잘림 방지 */
 }
 .panel h3 { margin: 0 0 8px; font-size: 16px; }
 
@@ -256,31 +292,36 @@ function clearNote() {
 .dash { opacity: .6; }
 .desc { color: var(--ink-soft); }
 
-/* 메모 */
-.note textarea {
-  width: 100%; min-height: 96px; resize: vertical;
-  padding: 10px 12px; border-radius: 10px;
-  border: 1px solid rgba(0,0,0,0.12); background: #fffdfa;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+/* 메모 입력란 */
+.note { display: block; }
+.memo {
+  width: 100%;
+  max-width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  padding: 10px 12px;
+  margin: 6px 0 0;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: #fffdfa;
+  color: #111;                 /* ✅ 글씨 진하게 */
+  box-sizing: border-box;      /* ✅ 패딩/보더 포함 → 부모보다 커지지 않음 */
+  line-height: 1.45;
 }
+.memo::placeholder { color: rgba(0,0,0,0.45); } /* ✅ placeholder도 보이게 */
 
-/* 버튼 */
 .btn {
-  appearance: none; border: none;
-  background: linear-gradient(90deg, #f59e0b, #ef4444);
-  color: white; padding: 10px 14px; border-radius: 10px; font-weight: 700;
-  cursor: pointer; transition: transform 120ms ease, filter 120ms ease;
+  appearance: none; border: 1px solid rgba(0,0,0,0.15);
+  background: transparent; color: var(--ink);
+  padding: 8px 12px; border-radius: 10px; font-weight: 700;
+  cursor: pointer; transition: transform 120ms ease, filter 120ms ease, background 120ms ease;
   margin-top: 10px;
 }
-.btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.btn:hover { transform: translateY(-1px); background: rgba(0,0,0,0.04); }
 .btn:active { transform: translateY(0); }
-.btn.ghost { background: transparent; border: 1px solid rgba(0,0,0,0.15); color: var(--ink); }
 
-/* 오방색 포인트 */
-.obang {
-  display: grid; grid-template-columns: repeat(5, 1fr);
-  gap: 6px; margin-top: 12px;
-}
+/* 오방색 */
+.obang { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 12px; }
 .obang span { display:block; height: 16px; border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12); }
 .c-blue { background:#0ea5e9; } .c-red{background:#ef4444;} .c-yellow{background:#fbbf24;}
 .c-white{background:#e5e7eb;} .c-black{background:#111827; }
